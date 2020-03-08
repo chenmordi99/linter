@@ -1,0 +1,19 @@
+{
+  "name": "fullstack_app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"cd server && node app.js\" \"cd client && npm start\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^3.2.0",
+    "asyncawait": "^3.0.0",
+    "await": "^0.2.6",
+    "concurrently": "^5.0.1",
+    "react-router-dom": "^5.1.2"
+  }
+}
