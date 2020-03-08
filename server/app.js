@@ -4,11 +4,12 @@ const express = require('express');
 var cors = require('cors');
 const bodyParser = require('body-parser');
 const logger = require('morgan');
-
+const { zip } = require('ramda')
 const Form = require('./models/form_schema');
 const Sub = require('./models/sub_schema');
 
-
+const { check, validationResult } = require('express-validator');
+let validator = require('validator');
 
 const API_PORT = 3001;
 const app = express();
@@ -40,7 +41,14 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(logger('dev'));
 
+const idCounterCtor = async (idCounter) => {
+  const forms = await Form.find({});
+  let c = forms.length;
+  idCounter.getNextId = () => c++;
+}
 
+const idCounter = {};
+idCounterCtor(idCounter);
 
 
 
@@ -58,22 +66,9 @@ router.get('/getForms', (req, res) => {
 router.post('/putForm', (req, res) => {
   let form = new Form();
 
-  const {id, name, ammount, fields, labels, types} = req.body;
+  const {name, ammount, fields, labels, types} = req.body;
 
-  if (id< 0) {
-    return res.json({
-      success: false,
-      error: 'id has a negative number'
-    });
-  }
-
-  if(name.length>21){
-    return res.json({
-      success: false,
-      error: 'Form name can have maximmum of 20 letters and signs',
-    });
-  }
-  form.id = id;
+  form.id = idCounter.getNextId();
   form.name = name;
   form.ammount = ammount;
   form.fields= fields;
@@ -102,21 +97,6 @@ router.get('/getSpecificForm/:id', (req, res) => {
 
 
 
-// This function increase the number of sumbission of a given form
-router.post('/updateData/:id', (req, res) => {
-  const iden = parseInt(req.params.id);
-  
-  Form.findByIdAndUpdate({"id":iden},{$inc:{"ammount":1}}, (err) => {
-    if (err) return res.json({ success: false, error: err });
-    return res.json({ success: true });
-  });
-});
-
-
-
-
-
-
 //this is a get method for submisssions
 router.get('/getSub/:id', (req, res) => {
   const form_identifier= parseInt(req.params.id);
@@ -139,18 +119,35 @@ router.post('/incAmmount', async (req,res)=>{
 
 
 
-router.post('/putSubmission', (req, res) => {
-  let sub = new Sub();
+router.post('/putSubmission', async (req, res) => {
+  
 
-  const {id, form_id, results} = req.body;
 
-  if (id< 0) {
-    return res.json({
-      success: false,
-      error: 'INVALID INPUTS',
-    });
+  const {form_id, results, types} = req.body;
+  const zipped = zip(results, types);
+  let isValid = true;
+  for(let i=0; i<zipped.length && isValid; i++){
+    let field = zipped[i][0];
+    let type = zipped[i][1];
+    
+    
+    isValid = type === 'email' ? validator.isEmail(field) :
+    type === 'tel' ? validator.isMobilePhone(field) :
+    type === 'text' ? validator.isLength(field, {min:1}):
+    type === 'color' ? validator.isLength(field, {min:1}):
+    type === 'date' ? validator.isLength(field, {min:1}):
+    type === 'number' ? validator.isDecimal(field):
+    "";
+    console.log(`field: ${field}, type: ${type}, res: ${isValid}`)
   }
-  sub.id = id;
+  
+  if (!isValid) {
+    return res.status(422).json({ success: false });
+  }
+
+  let identifier = parseInt(form_id);
+  const updated = await Form.findOneAndUpdate({ id: identifier }, { $inc: {ammount: 1} });
+  let sub = new Sub(); 
   sub.form_id = form_id;
   sub.results = results;
   
