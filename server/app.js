@@ -94,6 +94,20 @@ router.get('/getSub/:id', (req, res) => {
   });
 });
 
+
+
+router.post('/token'),(req,res)=>{
+
+  const update_req = req.address +'?client_id=151d4f20ea6beb891feb?client_secret=7ea13ad886d4a9b9790f988450400f2a225de82d'
+  const code =  '?code='+req.code
+
+  access_token = postMessage(update_req+code);
+
+  return res.json({success:true, data:access_token})
+}
+
+
+
 router.post('/incAmmount', async (req, res) => {
   const form_identifier = parseInt(req.query.id);
   const updated = await Form.findOneAndUpdate(
