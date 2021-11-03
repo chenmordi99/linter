@@ -20,7 +20,7 @@
     "mongoose": "^5.9.2",
     "morgan": "^1.9.1",
     "ramda": "^0.27.0",
-    "validator": "^12.2.0"
+    "validator": "^13.7.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.2"
