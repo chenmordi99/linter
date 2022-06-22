@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "async": "^3.2.0",
+    "async": "^3.2.2",
     "asyncawait": "^3.0.0",
     "await": "^0.2.6",
     "concurrently": "^5.0.1",
